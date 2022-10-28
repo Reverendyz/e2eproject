@@ -1,0 +1,66 @@
+version: "3.9"
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    privileged: true
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    container_name: jenkins
+    environment:
+      - JAVA_OPTS="-Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true"
+    volumes:
+      - type: volume
+        source: jenkins-data
+        target: /var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jenkins
+  jenkins_worker:
+    image: jenkins/inbound-agent:latest
+    init: true
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_SECRET=YP5AGP/CIG2+Hdx26nJWd/xrobZEkBQUB8752+Hg/oFoojRo785j7iYR
+      - JENKINS_AGENT_NAME=worker
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/jenkins-agent
+    volumes:
+      - type: volume
+        source: jenkins-worker-data
+        target: /var/jenkins
+    networks:
+      - jenkins
+    depends_on:
+      - jenkins
+    ports:
+      - 34700
+  jenkins_worker2:
+    build:
+      context: ./jenkins-worker
+    init: true
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_SECRET=GA3OoZKxSNpOxj9WRsx50AbQKXbX5OZaJ6BiC7uNGr9quJ9OVRW8luke
+      - JENKINS_AGENT_NAME=worker2
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/jenkins-agent
+    volumes:
+      - type: volume
+        source: jenkins-worker-data
+        target: /var/jenkins
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    networks:
+      - jenkins
+    depends_on:
+      - jenkins
+    ports:
+      - 34700
+
+volumes: 
+  jenkins-data:
+  jenkins-worker-data:
+
+networks:
+  jenkins:
