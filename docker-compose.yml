@@ -11,9 +11,9 @@ services:
     environment:
       - JAVA_OPTS="-Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true"
     volumes:
-      - type: volume
+      - type: bind
         source: jenkins-data
-        target: /var/jenkins_home
+        target: /var/jenkins-data
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - jenkins
@@ -58,9 +58,24 @@ services:
     ports:
       - 34700
 
+  spinnaker:
+    image: us-docker.pkg.dev/spinnaker-community/docker/halyard:stable
+    privileged: true
+    user: root
+    ports:
+      - 8181:8181
+      - 35000:35000
+    container_name: spinnaker
+    volumes:
+      - ~/.hal:/home/spinnaker/.hal
+      - ~/.kube/:/home/spinnaker/.kube
+    networks:
+      - spinnaker
+
 volumes: 
   jenkins-data:
   jenkins-worker-data:
 
 networks:
   jenkins:
+  spinnaker:
